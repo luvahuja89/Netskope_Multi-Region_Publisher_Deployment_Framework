@@ -1,0 +1,20 @@
+# Terraform state & cache
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Sensitive variable overrides containing real tokens
+*.tfvars
+!clients/client-standard-2regions.tfvars
+!clients/client-enterprise-10regions.tfvars
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

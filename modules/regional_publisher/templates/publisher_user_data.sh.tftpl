@@ -1,0 +1,56 @@
+#!/bin/bash
+set -euo pipefail
+
+# ==============================================================================
+# Netskope Publisher Provisioning & Security Hardening Script
+# ==============================================================================
+
+echo "=== Starting Netskope Publisher Provisioning & Hardening ==="
+
+# 1. Register Publisher Token (if provided)
+REGISTRATION_TOKEN="${registration_token}"
+if [ -n "$REGISTRATION_TOKEN" ] && [ "$REGISTRATION_TOKEN" != "CHANGE_ME" ]; then
+    echo "Configuring Netskope Publisher Registration Token..."
+    mkdir -p /etc/netskope
+    echo "$REGISTRATION_TOKEN" > /etc/netskope/publisher_token
+    chmod 600 /etc/netskope/publisher_token
+    
+    if command -v nskpublisher &> /dev/null; then
+        echo "Executing nskpublisher registration..."
+        nskpublisher -r "$REGISTRATION_TOKEN" || true
+    else
+        echo "nskpublisher CLI tool not found in PATH; token saved to /etc/netskope/publisher_token for automated boot service."
+    fi
+fi
+
+# 2. Network & DNS Overrides (systemd-resolved & Netplan)
+echo "Configuring DNS overrides via systemd-resolved..."
+mkdir -p /etc/systemd/resolved.conf.d/
+cat <<EOF > /etc/systemd/resolved.conf.d/netskope-dns.conf
+[Resolve]
+DNS=8.8.8.8 1.1.1.1
+Domains=~.
+EOF
+systemctl restart systemd-resolved || true
+
+# 3. Host Firewall Configuration (UFW)
+if command -v ufw &> /dev/null; then
+    echo "Applying UFW security rules..."
+    ufw default deny incoming
+    ufw default allow outgoing
+    ufw allow 22/tcp comment 'Management SSH Access'
+    ufw --force enable || true
+fi
+
+# 4. SNMPv3 Hardening Configuration
+if [ -f /etc/snmp/snmpd.conf ]; then
+    echo "Hardening SNMPv3 settings..."
+    cat <<EOF >> /etc/snmp/snmpd.conf
+# Netskope Hardened SNMPv3 Settings
+createUser nskadmin SHA "AuthSecretKey123!" AES "PrivSecretKey123!"
+rouser nskadmin authpriv
+EOF
+    systemctl restart snmpd || true
+fi
+
+echo "=== Netskope Publisher Provisioning Complete ==="
