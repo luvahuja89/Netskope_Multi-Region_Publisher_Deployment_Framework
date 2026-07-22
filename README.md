@@ -64,6 +64,9 @@ flowchart TD
 
 ---
 
+
+<img width="1113" height="586" alt="image" src="https://github.com/luvahuja89/Netskope_Multi-Region_Publisher_Deployment_Framework/blob/f360d444337b6d847324b0ac72c047ddf115287b/Netskope%20Architecture.png" />
+
 ## 3. Publisher Token Workflow & Lifecycle
 
 The Netskope Publisher Registration Token is a cryptographic, single-use bootstrap key generated inside your Netskope Tenant Admin Console (*Settings > Private Access > Publishers > Add Publisher*). It securely binds newly launched EC2 VMs to your Netskope tenant without embedding permanent administrative credentials inside the VM image.
